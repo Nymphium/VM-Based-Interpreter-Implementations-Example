@@ -1,0 +1,5 @@
+(jbuild_version 1)
+
+(library
+  ((name hvm)
+   (preprocess (pps (ppx_deriving.std)))))
