@@ -1,0 +1,324 @@
+\documentclass{article}
+\usepackage[left=6.3em,right=7em,top=7em]{geometry}
+\usepackage{amsmath}
+\usepackage{bcprules}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{multicol}
+\begin{document}
+\section{source language $\mathcal{T}$}
+\begin{flalign*}
+    \mathtt{n} ::=&\quad n \in \mathcal{N} \\
+    e ::=&\qquad \mathtt{n} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{()} \mid \mathtt{x} \\
+         &\quad \mid \mathtt{e+e} \mid \mathtt{e-e} \mid \mathtt{e*e} \mid \mathtt{e/e}\\
+         &\quad \mid \mathtt{e=e} \mid \mathtt{e<e} \mid \mathtt{e>=e} \mid \mathtt{not\ e}\\
+         &\quad \mid \mathtt{if}\ \mathtt{e}\ \mathtt{then}\ \mathtt{e}\ \mathtt{else}\ \mathtt{e}\\
+         &\quad \mid \mathtt{let\ x=e\ in\ e} \mid \mathtt{fun\ x \rightarrow e} \mid \mathtt{e\ e}
+\end{flalign*}
+
+\section{Virtual Machine specificatoin}
+\subsection{closure representation}
+\[Q = \left\langle I, C, F, Um \right\rangle\]
+$I$ is instruction sequense, $C$ is constant table, $F$ is closure table%
+and $Um$ is just an information, to create upvalues, composed of index and \textit{meta} index, which of the former represents current register value and the latter does the upvalue index.
+
+\subsection{machine state}
+\[S = \left\langle Q, pc, U, R \right\rangle\]
+$ps$ is program counter which points nth instruction of $I$, $U$ is upvalues table and $R$ is register list.
+
+\subsection{values}
+\begin{flalign*}
+    v ::=\quad \mathtt{null} \mid \mathtt{()} \mid \mathtt{i} \in \mathcal{N} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{closure}
+\end{flalign*}
+
+\subsection{Instruction set}
+\begin{multicols}{2}
+    \begin{itemize}
+        \item \texttt{Load(a, kx)}
+
+            set \texttt{C[kx]} to \texttt{R[a]}
+        \item \texttt{SetBool(a, x)}
+
+            set boolean \texttt{x > 0} to \texttt{R[a]}
+        \item \texttt{Unit(a)}
+
+            set \texttt{()} to \texttt{R[a]}
+        \item \texttt{Clos(a, cx)}
+
+            create $U'$ = $U\ @\ \{u \mid i_u \in Um \wedge u = R[i_u]\}$
+            and set $\left\langle \mathtt{F[cx]}, 0, U', R'\right\rangle$ with environment to \texttt{R[a]}
+        \item \texttt{Upval(a, ux)}
+
+            set \texttt{U[rx]} to \texttt{R[a]}
+        \item \texttt{Add(a, b, c)}
+
+            set \texttt{R[b] + R[c]} to \texttt{R[a]}
+        \item \texttt{Sub(a, b, c)}
+
+            set \texttt{R[b] - R[c]} to \texttt{R[a]}
+        \item \texttt{Mul(a, b, c)}
+
+            set \texttt{R[b] * R[c]} to \texttt{R[a]}
+        \item \texttt{Div(a, b, c)}
+
+            set \texttt{R[b] / R[c]} to \texttt{R[a]}
+        \item \texttt{Eq(a, b)}
+
+            if \texttt{R[a] == R[b]} then \texttt{pc++}
+        \item \texttt{Lt(a, b)}
+
+            if \texttt{R[a] < R[b]} then \texttt{pc++}
+        \item \texttt{Ge(a, b)}
+
+            if \texttt{R[a] >= R[b]} then \texttt{pc++}
+
+        \item \texttt{Test(a, p)}
+
+            if \texttt{p > 0 \&\& R[a] || p <= 0 \&\& !R[a]} then \texttt{pc++}
+
+        \item \texttt{Jump(x)}
+
+            \texttt{pc += x}
+        \item \texttt{Move(a, b)}
+
+            set \texttt{R[b]} to \texttt{R[a]}
+        \item \texttt{Call(a, b)}
+
+            call closure \texttt{R[a]} with argument \texttt{R[b]} and set return value to \texttt{R[a]}
+        \item \texttt{Return(a)}
+
+            terminate VM and returns \texttt{R[a]}
+    \end{itemize}
+\end{multicols}
+\section{compilation: translate source language program to VM initial state (input bytecode)}
+\begin{center}
+    relation $\llceil\mathcal{T}, \Sigma, Q\rrceil = Q', \Sigma'$
+\end{center}
+
+$\Sigma$ is an environment from source language variable to register index.
+
+$Q_{init}\left(e\right) = \llceil e, [], \left\langle [], [], [], []\right\rangle \rrceil$
+
+\infrule[Int]{%
+    \mathtt{a}\ \mathrm{and}\ \mathtt{kx}\ \mathrm{are\ fresh}
+}{
+    \llceil\mathtt{n}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =%
+    \left\langle
+    I; \mathtt{Load(a, kx)}; \mathtt{Return(a)}, C; \mathtt{kx} = \mathtt{n}, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infax[Unit]{
+    \llceil\mathtt{()}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =
+    \left\langle
+    I; \mathtt{Unit(a)}; \mathtt{Return(a)}, C, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infax[True]{
+    \llceil\mathtt{true}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =
+    \left\langle
+    I; \mathtt{SetBool(a, 1)}; \mathtt{Return(a)}, C, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infax[False]{
+    \llceil\mathtt{false}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =
+    \left\langle
+    I; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infrule[Add]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+    Q = \left\langle
+    I,C, F, Um
+    \right\rangle
+    \andalso
+    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\rangle, \Sigma'
+    \andalso\\
+    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', Um'\rangle \rrceil = \langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\rangle, \Sigma''
+}{
+\llceil \mathtt{e1 + e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Add(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Sub]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+    Q = \left\langle
+    I,C, F, Um
+    \right\rangle
+    \andalso
+    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\rangle, \Sigma'
+    \andalso\\
+    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', Um'\rangle \rrceil = \langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\rangle, \Sigma''
+}{
+\llceil \mathtt{e1 - e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Sub(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Mul]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+    Q = \left\langle
+    I,C, F, Um
+    \right\rangle
+    \andalso
+    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\rangle, \Sigma'
+    \andalso\\
+    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', Um'\rangle \rrceil = \langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\rangle, \Sigma''
+}{
+\llceil \mathtt{e1 * e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Mul(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Div]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+    Q = \left\langle
+    I,C, F, Um
+    \right\rangle
+    \andalso
+    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\rangle, \Sigma'
+    \andalso\\
+    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', Um'\rangle \rrceil = \langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\rangle, \Sigma''
+}{
+\llceil \mathtt{e1 / e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Div(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Eq]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+   Q=\left\langle I,C,F,Um \right\rangle
+   \andalso
+   \llceil e1, \Sigma, Q\rrceil = \left\langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\right\rangle, \Sigma'
+   \andalso\\
+   \llceil e2, \Sigma', \left\langle I', C', F', Um'\right\rangle\rrceil = \left\langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\right\rangle, \Sigma''
+}{
+    \llceil
+    \mathtt{e1 = e2}, \Sigma, Q
+    \rrceil\\
+    = 
+    \langle I''; \mathtt{Eq(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Lt]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+   Q=\left\langle I,C,F,Um \right\rangle
+   \andalso
+   \llceil e1, \Sigma, Q\rrceil = \left\langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\right\rangle, \Sigma'
+   \andalso\\
+   \llceil e2, \Sigma', \left\langle I', C', F', Um'\right\rangle\rrceil = \left\langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\right\rangle, \Sigma''
+}{
+    \llceil
+    \mathtt{e1 = e2}, \Sigma, Q
+    \rrceil\\
+    = 
+    \langle I''; \mathtt{Lt(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Ge]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+   Q=\left\langle I,C,F,Um \right\rangle
+   \andalso
+   \llceil e1, \Sigma, Q\rrceil = \left\langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\right\rangle, \Sigma'
+   \andalso\\
+   \llceil e2, \Sigma', \left\langle I', C', F', Um'\right\rangle\rrceil = \left\langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\right\rangle, \Sigma''
+}{
+    \llceil
+    \mathtt{e1 = e2}, \Sigma, Q
+    \rrceil\\
+    = 
+    \langle I''; \mathtt{Ge(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+\infrule[Not]{
+    \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso
+   Q=\left\langle I,C,F,Um \right\rangle
+   \andalso
+   \llceil e, \Sigma, Q\rrceil = \left\langle I'; \mathtt{Return(r_{e})}, C', F', Um'\right\rangle, \Sigma'
+}{
+    \llceil
+    \mathtt{not\ e}, \Sigma, Q
+    \rrceil\\
+    = 
+    \langle I'; \mathtt{Test(r_{e}, 0)}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C', F', Um'\rangle, \Sigma'
+}
+
+\infrule[Fun]{
+    \mathtt{a}\ \mathrm{and}\ \mathtt{cx}\ \mathrm{are\ fresh}
+    \andalso
+    Q = \left\langle I, C, F, Um\right\rangle
+    \andalso
+    fv = FV\left(\mathtt{fun\ x\rightarrow e}\right)
+    \andalso
+    \Sigma_0 = \{\left(\mathtt{x} = \mathtt{i_r}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right) \in \Sigma \wedge \mathtt{x} \in fv \}
+    \andalso\\
+    \Sigma' = \{ \left(\mathtt{x} = \mathtt{-\left(i + 1\right)}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right)\ \mathrm{as}\ xi \in \Sigma_0 \wedge xi\ \mathrm{is}\ i\mathrm{th\ element\ of}\ \Sigma_0 \}
+    \andalso
+    Um' = \{ \mathtt{i} \mid \left(\textunderscore, \mathtt{i}\right) \in \Sigma' \}
+    \andalso\\
+    Q_{init}\left(\mathtt{e}\right) = \llceil \mathtt{e}, \Sigma_\mathtt{e}, Q_\mathtt{e}\rrceil
+    \andalso
+    Q_\mathtt{e}[Um] \mathtt{:=} Um'
+    \andalso
+    \Sigma_\mathtt{e}' = \Sigma_\mathtt{e}; \mathtt{x} = 0
+    \andalso
+    \llceil \mathtt{e}, \Sigma_\mathtt{e}', Q_\mathtt{e}\rrceil%
+    = \left\langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, \textunderscore\right\rangle, \Sigma_\mathtt{e}''
+    \andalso\\
+    Clos = \left\langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, Um @ Um' \right\rangle
+}{
+    \llceil \mathtt{fun\ x \rightarrow e}, \Sigma, Q\rrceil
+    =
+    \langle I; \mathtt{Clos(a, cx)}; \mathtt{Return(a)}, C, F; \mathtt{cx} = Clos, Um \rangle, \Sigma
+}
+
+\infrule[Call]{
+    Q = \left\langle
+    I,C, F, Um
+    \right\rangle
+    \andalso
+    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I'; \mathtt{Return(r_{e1})}, C', F', Um'\rangle, \Sigma'
+    \andalso\\
+    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', Um'\rangle \rrceil = \langle I''; \mathtt{Return(r_{e2})}, C'', F'', Um''\rangle, \Sigma''
+}{
+\llceil \mathtt{e1\ e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Call(r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', Um''\rangle, \Sigma''
+}
+
+
+
+\infrule[VarLocal]{
+    \Sigma[\mathtt{x}] = \mathtt{i} \wedge \mathtt{i >= 0}
+}{
+    \llceil \mathtt{x}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =
+    \left\langle
+    I; \mathtt{Move(a, i)}; \mathtt{Return(a)}, C, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infrule[VarUpval]{
+    \Sigma[\mathtt{x}] = \mathtt{i} \wedge \mathtt{i < 0}
+}{
+    \llceil \mathtt{x}, \Sigma, \left\langle I, C, F, Um\right\rangle \rrceil =
+    \left\langle
+    I; \mathtt{Upval(a, -i - 1)}; \mathtt{Return(a)}, C, F, Um
+    \right\rangle, \Sigma'
+}
+
+\infrule[Let]{
+    \mathtt{b}\ \mathrm{is\ fresh}
+    \andalso
+    Q = \left\langle
+        I, C, F, Um
+    \right\rangle
+    \andalso\\
+    \llceil e_1, \Sigma, Q\rrceil = \left\langle I'; \mathtt{Return(a)}, C', F', Um'\right\rangle, \Sigma'
+    \andalso
+    \llceil e_2, \Sigma'; \mathtt{x}=\mathtt{a}, \left\langle I'; \mathtt{Move(b, a)}, C', F', Um'\right\rangle\rrceil = Q', \Sigma''
+}{
+    \llceil \mathtt{let\ x=e_1\ in\ e_2}, \Sigma, Q\rrceil = Q', \Sigma''
+}
+\end{document}

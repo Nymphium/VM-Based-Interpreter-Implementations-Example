@@ -4,12 +4,15 @@ let test t =
   print_endline @@ Term.show t;
   print_endline "->";
   let c = Compile.compile t in
-  print_endline @@ Vm.show_cl c;
+  print_endline @@ Irepr.show_cl c;
   print_endline "~~>";
-  let result = Vm.run c in
-  print_endline @@ Vm.show_regv result
+  let result = Vm1.run c in
+  print_endline @@ Irepr.show_regv result
 
 let () =
+  let tif = Term.(Let("x", Int 4, Let("y", Int 8, If(Lt(Var"x", Var"y"), Add(Var"x", Var"y"), Sub(Var"x", Var"y"))))) in
+  test tif;
+
   (** (fun x _ -> x) 3 5 *)
   let t1 = Term.(App(App(Fun("x", Fun("y", Var "x")), Int 3), Int 5)) in
   test t1;
