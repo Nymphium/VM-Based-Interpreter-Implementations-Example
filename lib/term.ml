@@ -3,6 +3,7 @@ type t =
   | Unit
   | Int of int
   | Fun of string * t
+  | LetRecFun of string * string * t * t
   | Var of string
   | App of t * t
   | Let of string * t * t
