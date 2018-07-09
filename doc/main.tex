@@ -9,7 +9,7 @@
 \section{source language $\mathcal{T}$}
 \begin{flalign*}
     \mathtt{n} ::=&\quad n \in \mathcal{N} \\
-    e ::=&\qquad \mathtt{n} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{()} \mid \mathtt{x} \\
+    \mathtt{e} ::=&\qquad \mathtt{n} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{()} \mid \mathtt{x} \\
          &\quad \mid \mathtt{e+e} \mid \mathtt{e-e} \mid \mathtt{e*e} \mid \mathtt{e/e}\\
          &\quad \mid \mathtt{e=e} \mid \mathtt{e<e} \mid \mathtt{e>=e} \mid \mathtt{not\ e}\\
          &\quad \mid \mathtt{if}\ \mathtt{e}\ \mathtt{then}\ \mathtt{e}\ \mathtt{else}\ \mathtt{e}\\
@@ -24,88 +24,92 @@ and $\mathit{Um}$ is just an information, to create upvalues, composed of index 
 
 \subsection{machine state}
 \[S = \left\langle Q, \mathtt{pc}, U, R \right\rangle\]
-$ps$ is program counter which points nth instruction of $I$, $U$ is upvalues table and $R$ is register list.
+\texttt{pc} is program counter which points nth instruction of $I$, $U$ is upvalues table and $R$ is register list.
 
 \subsection{values}
 \begin{flalign*}
-    v ::=\quad \mathtt{null} \mid \mathtt{()} \mid \mathtt{i} \in \mathcal{N} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{clos}\left(Q, U\right)
+    \mathtt{v} ::=\quad \mathtt{null} \mid \mathtt{()} \mid \mathtt{i} \in \mathcal{N} \mid \mathtt{true} \mid \mathtt{false} \mid \mathtt{clos}\left(Q, U\right)
 \end{flalign*}
 
 \subsection{Instructions}
-\begin{multicols}{2}
-    \begin{itemize}
-        \item \texttt{Load(a, kx)}
+\begin{minipage}{\textwidth}
+    \begin{multicols}{2}
+        \begin{itemize}
+            \item \texttt{Load(a, kx)}
 
-            set \texttt{C[kx]} to \texttt{R[a]}
-        \item \texttt{SetBool(a, x, p)}
+                set \texttt{C[kx]} to \texttt{R[a]}
+            \item \texttt{SetBool(a, x, p)}
 
-            set boolean \texttt{x > 0} to \texttt{R[a]};
-            if \texttt{p = 1} then \texttt{pc++}
-        \item \texttt{Unit(a)}
+                set boolean \texttt{x > 0} to \texttt{R[a]};
+                if \texttt{p = 1} then \texttt{pc++}
+            \item \texttt{Unit(a)}
 
-            set \texttt{()} to \texttt{R[a]}
-        \item \texttt{Clos(a, cx, p)}
+                set \texttt{()} to \texttt{R[a]}
+            \item \texttt{Clos(a, cx, p)}
 
-            create $U'$ = $U\ @\ \{u \mid i_u \in \mathit{Um} \wedge u = R[i_u]\}$
-            and set $\left\langle \mathtt{F[cx]}, 0, U', R'\right\rangle$ with environment to \texttt{R[a]}
-            if \texttt{p=1} then the closure is recursive
-        \item \texttt{Upval(a, ux)}
+                create $U'$ = $U\ @\ \left\{u \mid i_u \in \mathit{Um} \wedge u = R[i_u]\right\}$
+                and set $\left\langle \mathtt{F[cx]}, 0, U', R'\right\rangle$ with environment to \texttt{R[a]}
+                if \texttt{p=1} then the closure is recursive
+            \item \texttt{Upval(a, ux)}
 
-            set \texttt{U[rx]} to \texttt{R[a]}
-        \item \texttt{Add(a, b, c)}
+                set \texttt{U[rx]} to \texttt{R[a]}
+            \item \texttt{Add(a, b, c)}
 
-            set \texttt{R[b] + R[c]} to \texttt{R[a]}
-        \item \texttt{Sub(a, b, c)}
+                set \texttt{R[b] + R[c]} to \texttt{R[a]}
+            \item \texttt{Sub(a, b, c)}
 
-            set \texttt{R[b] - R[c]} to \texttt{R[a]}
-        \item \texttt{Mul(a, b, c)}
+                set \texttt{R[b] - R[c]} to \texttt{R[a]}
+            \item \texttt{Mul(a, b, c)}
 
-            set \texttt{R[b] * R[c]} to \texttt{R[a]}
-        \item \texttt{Div(a, b, c)}
+                set \texttt{R[b] * R[c]} to \texttt{R[a]}
+            \item \texttt{Div(a, b, c)}
 
-            set \texttt{R[b] / R[c]} to \texttt{R[a]}
-        \item \texttt{Eq(a, b)}
+                set \texttt{R[b] / R[c]} to \texttt{R[a]}
+            \item \texttt{Eq(a, b)}
 
-            if \texttt{R[a] == R[b]} then \texttt{pc++}
-        \item \texttt{Lt(a, b)}
+                if \texttt{R[a] == R[b]} then \texttt{pc++}
+            \item \texttt{Lt(a, b)}
 
-            if \texttt{R[a] < R[b]} then \texttt{pc++}
-        \item \texttt{Ge(a, b)}
+                if \texttt{R[a] < R[b]} then \texttt{pc++}
+            \item \texttt{Ge(a, b)}
 
-            if \texttt{R[a] >= R[b]} then \texttt{pc++}
+                if \texttt{R[a] >= R[b]} then \texttt{pc++}
+        \end{itemize}
+    \end{multicols}
+\end{minipage}
+\begin{minipage}{\textwidth}
+    \begin{multicols}{2}
+        \begin{itemize}
+            \item \texttt{Test(a, p)}
 
-        \item \texttt{Test(a, p)}
+                if \texttt{p > 0 \&\& R[a] || p <= 0 \&\& !R[a]} then \texttt{pc++}
 
-            if \texttt{p > 0 \&\& R[a] || p <= 0 \&\& !R[a]} then \texttt{pc++}
+            \item \texttt{Jump(x)}
 
-        \item \texttt{Jump(x)}
+                \texttt{pc += x}
+            \item \texttt{Move(a, b)}
 
-            \texttt{pc += x}
-        \item \texttt{Move(a, b)}
+                set \texttt{R[b]} to \texttt{R[a]}
+            \item \texttt{Call(a, b)}
 
-            set \texttt{R[b]} to \texttt{R[a]}
-        \item \texttt{Call(a, b)}
+                call closure \texttt{R[a]} with argument \texttt{R[b]} and set return value to \texttt{R[a]}
+            \item \texttt{Return(a)}
 
-            call closure \texttt{R[a]} with argument \texttt{R[b]} and set return value to \texttt{R[a]}
-        \item \texttt{Return(a)}
+                exit closure evaluation and return \texttt{R[a]}
+            \item \texttt{TailCall(a, b)}
 
-            exit closure evaluation and return \texttt{R[a]}
-        \item \texttt{TailCall(a, b)}
+                call closure \texttt{R[a]} with argument \texttt{R[b]} and exit closure evaluation and return \texttt{R[a]}
+        \end{itemize}
+    \end{multicols}
+\end{minipage}
 
-            call closure \texttt{R[a]} with argument \texttt{R[b]} and exit closure evaluation and return \texttt{R[a]}
-    \end{itemize}
-\end{multicols}
 \section{compilation: translate source language program to VM initial state (input bytecode)}
-\begin{center}
-    relation $\llceil\mathcal{T}, \Sigma, Q\rrceil = Q', \Sigma'$
-\end{center}
-
+Compilation is represented as equation: \[\llceil\mathcal{T}, \Sigma, Q\rrceil = Q', \Sigma' .\]
 $\Sigma$ is an environment from source language variable to register index.
-
-$Q_{\mathit{init}}\left(e\right) = \llceil e, [], \left\langle [], [], [], []\right\rangle \rrceil$
+$Q_{\mathit{init}}$ generates initial compilation state: \[Q_{\mathit{init}}\left(e\right) = \llceil e, [], \left\langle [], [], [], []\right\rangle \rrceil .\]
 
 \subsection{auxiliary funcion}
-We define an auxiliary function to get last used register and rest instructions by pattern match.
+We define two auxiliary functions; \textit{mtch} is to get last used register and rest instructions by pattern match, 
 
 \begin{center}
     \begin{minipage}{.5\textwidth}
@@ -116,12 +120,27 @@ We define an auxiliary function to get last used register and rest instructions 
         \end{flalign*}
     \end{minipage}
 \end{center}
+\textit{FV} is to get free variables.
+\begin{center}
+    \begin{minipage}{.5\textwidth}
+        \begin{flalign*}
+            &FV\left(\mathtt{n}\right) \mid FV\left(\mathtt{true}\right) \mid FV\left(\mathtt{false}\right) \mid FV\left(\mathtt{()}\right) &&=& \left\{\right\}\\
+            &FV(\mathtt{x}) &&=& \left\{\mathtt{x}\right\}\\
+            &FV(\mathtt{not\ e}) &&=& FV(\mathtt{e})\\
+            &FV(\mathtt{e1 ? e2}) \mid FV\left(\mathtt{e1\ e2}\right) &&=& FV(\mathtt{e1}) \cup FV(\mathtt{e2})\\
+            &FV(\mathtt{if\ e1\ then\ e2\ else\ e3}) &&=& FV(\mathtt{e1}) \cup FV(\mathtt{e2}) \cup FV(\mathtt{e3})\\
+            &FV\left(\mathtt{fun\ x\rightarrow e}\right) &&=& FV\left(\mathtt{e}\right) \textbackslash \left\{\mathtt{x}\right\}\\
+            &FV\left(\mathtt{let\ x\ =\ e1\ in\ e2}\right) &&=& FV(\mathtt{e1}) \cup \left(FV\left(\mathtt{e2}\right) \textbackslash \left\{\mathtt{x}\right\}\right)\\
+            &FV\left(\mathtt{let\ rec\ f\ x=\ e1\ in\ e2}\right) &&=& \left(FV\left(\mathtt{e1}\right) \textbackslash \left\{\mathtt{x}\right\} \cup FV\left(\mathtt{e2}\right)\right) \textbackslash \left\{\mathtt{f}\right\}
+        \end{flalign*}
+    \end{minipage}
+\end{center}
 
 \subsection{compilation rules}
 
 \infrule[Int]{%
     \mathtt{a}\ \mathrm{and}\ \mathtt{kx}\ \mathrm{are\ fresh}
-    }{
+}{
     \llceil\mathtt{n}, \Sigma, \left\langle I, C, F, \mathit{Um}\right\rangle \rrceil =%
     \left\langle
         I; \mathtt{Load(a, kx)}; \mathtt{Return(a)}, C; \mathtt{kx} = \mathtt{n}, F, \mathit{Um}
@@ -150,195 +169,142 @@ We define an auxiliary function to get last used register and rest instructions 
 }
 
 \infrule[Add]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_\mathtt{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_\mathtt{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 + e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Add(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Sub]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 - e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Sub(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Mul]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 * e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Mul(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Div]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 / e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{Div(a, r_{e1}, r_{e2})}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Eq]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 = e2}, \Sigma, Q\rrceil = 
     \langle I''; \mathtt{Eq(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Lt]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 < e2}, \Sigma, Q\rrceil = 
     \langle I''; \mathtt{Lt(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Ge]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1 >= e2}, \Sigma, Q\rrceil = 
     \langle I''; \mathtt{Ge(r_{e1}, r_{e2})}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[Not]{
-    \mathtt{a}\ \mathrm{is\ fresh}
-    \andalso
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{is\ fresh}
+    \andalso Q = \left\langle I,C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e}, \Sigma, Q\rrceil = \langle I_\mathtt{e}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e}\right) = \left(\mathtt{r_e}, I'\right)
-    }{
-    \llceil \mathtt{not\ e}, \Sigma, Q\rrceil = 
-    \langle I'; \mathtt{Test(r_{e}, 0)}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C', F', \mathit{Um}'\rangle, \Sigma'
+        \llceil \mathtt{e}, \Sigma, Q\rrceil = \langle I_\mathtt{e}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e}\right) = \left(\mathtt{r_e}, I'\right)
+}{
+    \llceil \mathtt{not\ e}, \Sigma, Q\rrceil = \langle I'; \mathtt{Test(r_{e}, 0)}; \mathtt{SetBool(a, 1)}; \mathtt{SetBool(a, 0)}; \mathtt{Return(a)}, C', F', \mathit{Um}'\rangle, \Sigma'
 }
 
 \infrule[Fun]{
-    \mathtt{a}\ \mathrm{and}\ \mathtt{cx}\ \mathrm{are\ fresh}
-    \andalso
-    Q = \left\langle I, C, F, \mathit{Um}\right\rangle
-    \andalso
-    fv = FV\left(\mathtt{fun\ x\rightarrow e}\right)
-    \andalso
-    \Sigma_0 = \{\left(\mathtt{x} = \mathtt{i_r}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right) \in \Sigma \wedge \mathtt{x} \in fv \}
+        \mathtt{a}\ \mathrm{and}\ \mathtt{cx}\ \mathrm{are\ fresh}
+    \andalso Q = \left\langle I, C, F, \mathit{Um}\right\rangle
+    \andalso fv = FV\left(\mathtt{fun\ x\rightarrow e}\right)
+    \andalso \Sigma_0 = \left\{\left(\mathtt{x} = \mathtt{i_r}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right) \in \Sigma \wedge \mathtt{x} \in fv \right\}
     \andalso\\
-    \Sigma' = \{ \left(\mathtt{x} = \mathtt{-\left(i + 1\right)}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right)\ \mathrm{as}\ \mathit{xi} \in \Sigma_0 \wedge \mathit{xi}\ \mathrm{is}\ i\mathrm{th\ element\ of}\ \Sigma_0 \}
-    \andalso
-    \mathit{Um}' = \{ \mathtt{i} \mid \left(\textunderscore = \mathtt{i}\right) \in \Sigma' \}
+        \Sigma' = \left\{ \left(\mathtt{x} = \mathtt{-\left(i + 1\right)}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right)\ \mathrm{as}\ \mathit{xi} \in \Sigma_0 \wedge \mathit{xi}\ \mathrm{is}\ i\mathrm{th\ element\ of}\ \Sigma_0 \right\}
+    \andalso \mathit{Um}' = \left\{ \mathtt{i} \mid \left(\textunderscore = \mathtt{i}\right) \in \Sigma' \right\}
     \andalso\\
-    Q_{\mathit{init}}\left(\mathtt{e}\right) = \llceil \mathtt{e}, \Sigma_\mathtt{e}, \left\langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, \textunderscore\right\rangle \rrceil
-    \andalso
-    \Sigma_\mathtt{e}' = \Sigma_\mathtt{e}; \mathtt{x} = 0
-    \andalso
-    \llceil \mathtt{e}, \Sigma_\mathtt{e}', \langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, \mathit{Um}' \rangle \rrceil%
-    = \left\langle I_\mathtt{e}', C_\mathtt{e}', F_\mathtt{e}', \textunderscore\right\rangle, \Sigma_\mathtt{e}''
+        Q_{\mathit{init}}\left(\mathtt{e}\right) = \llceil \mathtt{e}, \Sigma_\mathtt{e}, \left\langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, \textunderscore\right\rangle \rrceil
+    \andalso \Sigma_\mathtt{e}' = \Sigma_\mathtt{e}; \mathtt{x} = 0
+    \andalso \llceil \mathtt{e}, \Sigma_\mathtt{e}', \langle I_\mathtt{e}, C_\mathtt{e}, F_\mathtt{e}, \mathit{Um}' \rangle \rrceil%
+        = \left\langle I_\mathtt{e}', C_\mathtt{e}', F_\mathtt{e}', \textunderscore\right\rangle, \Sigma_\mathtt{e}''
     \andalso\\
-    \mathit{Clos} = \left\langle I_\mathtt{e}', C_\mathtt{e}', F_\mathtt{e}', \mathit{Um} @ \mathit{Um}' \right\rangle
-    }{
-    \llceil \mathtt{fun\ x \rightarrow e}, \Sigma, Q\rrceil
-    =
-    \langle I; \mathtt{Clos(a, cx, 0)}; \mathtt{Return(a)}, C, F; \mathtt{cx} = \mathit{Clos}, \mathit{Um} \rangle, \Sigma
+        \mathit{Clos} = \left\langle I_\mathtt{e}', C_\mathtt{e}', F_\mathtt{e}', \mathit{Um} @ \mathit{Um}' \right\rangle
+}{
+    \llceil \mathtt{fun\ x \rightarrow e}, \Sigma, Q\rrceil = \langle I; \mathtt{Clos(a, cx, 0)}; \mathtt{Return(a)}, C, F; \mathtt{cx} = \mathit{Clos}, \mathit{Um} \rangle, \Sigma
 }
 
 \infrule[Call]{
-    Q = \left\langle
-        I,C, F, \mathit{Um}
-    \right\rangle
-    \andalso
-    \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        Q = \left\langle I,C, F, \mathit{Um} \right\rangle
+    \andalso \llceil \mathtt{e1}, \Sigma, Q\rrceil = \langle I_\mathtt{e1}, C', F', \mathit{Um}'\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
-    }{
+        \llceil \mathtt{e2}, \Sigma', \langle I', C', F', \mathit{Um}'\rangle \rrceil = \langle I_\mathtt{e2}, C'', F'', \mathit{Um}''\rangle, \Sigma''
+    \andalso \mathit{mtch}\left(I_\mathtt{e2}\right) = \left(\mathtt{r_{e2}}, I''\right)
+}{
     \llceil \mathtt{e1\ e2}, \Sigma, Q\rrceil = \langle I''; \mathtt{TailCall(r_{e1}, r_{e2})}, C'', F'', \mathit{Um}''\rangle, \Sigma''
 }
 
 \infrule[VarLocal]{
     \Sigma[\mathtt{x}] = \mathtt{i} \wedge \mathtt{i}\geq \mathtt{0}
-    }{
+}{
     \llceil \mathtt{x}, \Sigma, \left\langle I, C, F, \mathit{Um}\right\rangle \rrceil =
     \left\langle
         I; \mathtt{Move(a, i)}; \mathtt{Return(a)}, C, F, \mathit{Um}
@@ -347,7 +313,7 @@ We define an auxiliary function to get last used register and rest instructions 
 
 \infrule[VarUpval]{
     \Sigma[\mathtt{x}] = \mathtt{i} \wedge \mathtt{i < 0}
-    }{
+}{
     \llceil \mathtt{x}, \Sigma, \left\langle I, C, F, \mathit{Um}\right\rangle \rrceil =
     \left\langle
         I; \mathtt{Upval(a, -i - 1)}; \mathtt{Return(a)}, C, F, \mathit{Um}
@@ -355,57 +321,41 @@ We define an auxiliary function to get last used register and rest instructions 
 }
 
 \infrule[Let]{
-    \mathtt{a}\ \mathrm{and}\ \mathtt{b}\ \mathrm{are\ fresh}
-    \andalso
-    Q = \left\langle
-        I, C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{and}\ \mathtt{b}\ \mathrm{are\ fresh}
+    \andalso Q = \left\langle I, C, F, \mathit{Um} \right\rangle
     \andalso\\
-    \llceil \mathtt{e_1}, \Sigma, Q\rrceil = \left\langle I_\mathtt{e1}, C', F', \mathit{Um}'\right\rangle, \Sigma'
-    \andalso
-    \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
+        \llceil \mathtt{e_1}, \Sigma, Q\rrceil = \left\langle I_\mathtt{e1}, C', F', \mathit{Um}'\right\rangle, \Sigma'
+    \andalso \mathit{mtch}\left(I_\mathtt{e1}\right) = \left(\mathtt{r_{e1}}, I'\right)
     \andalso\\
-    \llceil \mathtt{e_2}, \Sigma'; \mathtt{x}=\mathtt{a}, \left\langle I'; \mathtt{Move(b, a)}, C', F', \mathit{Um}'\right\rangle\rrceil = Q', \Sigma''
-    }{
+        \llceil \mathtt{e_2}, \Sigma'; \mathtt{x}=\mathtt{a}, \left\langle I'; \mathtt{Move(b, a)}, C', F', \mathit{Um}'\right\rangle\rrceil = Q', \Sigma''
+}{
     \llceil \mathtt{let\ x=e_1\ in\ e_2}, \Sigma, Q\rrceil = Q', \Sigma''
 }
 
 \infrule[LetRecFun]{
-    \mathtt{a}\ \mathrm{and}\ \mathtt{cx}\ \mathrm{are\ fresh}
-    \andalso
-    Q = \left\langle
-        I, C, F, \mathit{Um}
-    \right\rangle
+        \mathtt{a}\ \mathrm{and}\ \mathtt{cx}\ \mathrm{are\ fresh}
+    \andalso Q = \left\langle I, C, F, \mathit{Um} \right\rangle
     \andalso\\
-    fv = \left(FV\left(\mathtt{e_1}\right) \textbackslash \{\mathtt{x}\} \cap FV\left(\mathtt{e_2}\right)\right) \textbackslash \{f\}
-    \andalso
-    \Sigma_0 = \{\left(\mathtt{x=i_r}\right) \mid \left(\mathtt{x=i_r}\right) \in \Sigma \wedge \mathtt{x}\in fv\} \cap \{\mathtt{f = a}\}
+        fv = \left(FV\left(\mathtt{e_1}\right) \textbackslash \left\{\mathtt{x}\right\} \cap FV\left(\mathtt{e_2}\right)\right) \textbackslash \left\{f\right\}
+    \andalso \Sigma_0 = \left\{\left(\mathtt{x=i_r}\right) \mid \left(\mathtt{x=i_r}\right) \in \Sigma \wedge \mathtt{x}\in fv\right\} \cap \left\{\mathtt{\left(f = a\right)}\right\}
     \andalso\\
-    \Sigma' = \{ \left(\mathtt{x} = \mathtt{-\left(i + 1\right)}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right)\ \mathrm{as}\ \mathit{xi} \in \Sigma_0 \wedge \mathit{xi}\ \mathrm{is}\ i\mathrm{th\ element\ of}\ \Sigma_0 \}
+    \Sigma' = \left\{ \left(\mathtt{x} = \mathtt{-\left(i + 1\right)}\right) \mid \left(\mathtt{x} = \mathtt{i_r}\right)\ \mathrm{as}\ \mathit{xi} \in \Sigma_0 \wedge \mathit{xi}\ \mathrm{is}\ i\mathrm{th\ element\ of}\ \Sigma_0 \right\}
     \andalso\\
-    \mathit{Um}' = \{i \mid \left(\mathtt{\textunderscore = i}\right) \in \Sigma'\}
-    \andalso
-    Q_\mathit{init}(\mathtt{e_1}) = \llceil \mathtt{e1}, \Sigma_\mathtt{e1}, \left\langle I_\mathtt{e1}, C_\mathtt{e1}, F_\mathtt{e1}, \textunderscore\right\rangle \rrceil
-    \andalso
-    \Sigma_\mathtt{e1}' = \Sigma_\mathtt{e1}; \mathtt{x} = \mathtt{0}
+        \mathit{Um}' = \left\{\mathtt{i} \mid \left(\mathtt{\textunderscore = i}\right) \in \Sigma'\right\}
+    \andalso Q_\mathit{init}(\mathtt{e_1}) = \llceil \mathtt{e1}, \Sigma_\mathtt{e1}, \left\langle I_\mathtt{e1}, C_\mathtt{e1}, F_\mathtt{e1}, \textunderscore\right\rangle \rrceil
+    \andalso \Sigma_\mathtt{e1}' = \Sigma_\mathtt{e1}; \mathtt{x} = \mathtt{0}
     \andalso\\
     \llceil \mathtt{e1}, \Sigma_\mathtt{e1}', \left\langle I_\mathtt{e1}, C_\mathtt{e1}, F_\mathtt{e1}, \mathit{Um}' \right\rangle \rrceil = \left\langle I_\mathtt{e1}', C_\mathtt{e1}', F_\mathtt{e1}', \textunderscore\right\rangle, \Sigma_\mathtt{e1}''
-    \andalso
-    \mathit{Clos}=\left\langle I_\mathtt{e1},', C_\mathtt{e1}', F_\mathtt{e1}', \mathit{Um} @ \mathit{Um'}\right\rangle
+    \andalso \mathit{Clos}=\left\langle I_\mathtt{e1},', C_\mathtt{e1}', F_\mathtt{e1}', \mathit{Um} @ \mathit{Um'}\right\rangle
     \andalso\\
-    I' = I; \mathtt{Clos(a, cx, 1)}
-    \andalso
-    F' = F; \mathtt{cx}=\mathit{Clos}
-    \andalso
-    \Sigma' = Sigma; \mathtt{f=a}
-    \andalso
-    \llceil \mathtt{e2}, \Sigma', \left\langle I', C, F', Um \right\rangle \rrceil = Q', \Sigma''
+        I' = I; \mathtt{Clos(a, cx, 1)}
+    \andalso F' = F; \mathtt{cx}=\mathit{Clos}
+    \andalso \Sigma' = \Sigma; \mathtt{f=a}
+    \andalso \llceil \mathtt{e2}, \Sigma', \left\langle I', C, F', Um \right\rangle \rrceil = Q', \Sigma''
 }{
-\llceil \mathtt{let\ rec\ f\ x=e1\ in\ e2}, \Sigma, Q\rrceil = Q', \Sigma''
+    \llceil \mathtt{let\ rec\ f\ x=e1\ in\ e2}, \Sigma, Q\rrceil = Q', \Sigma''
 }
 
-$FV\left(e\right)$ means a set of free variables in $e$
-
-\section{Evaluation: VM state transition rules}
+% \section{Evaluation: VM state transition rules}
 
 \end{document}
