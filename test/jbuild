@@ -1,7 +1,7 @@
 (jbuild_version 1)
 
-(executable
-  ((name vm)
-   (libraries (hvm))
+(executables
+  ((names (vm vm2))
+   (libraries (hvm core))
    (modes (native))
    (flags (:standard -g -linkall -annot -bin-annot))))

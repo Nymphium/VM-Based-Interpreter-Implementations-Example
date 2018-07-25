@@ -29,7 +29,7 @@ let rec drop i = function
 
 let find_opt_with_index p xs =
   let rec work i = function
-    | x :: xs when p x -> Some(x, i)
+    | x :: _ when p x -> Some(x, i)
     | _ :: xs -> work (i + 1) xs
     | [] -> None
   in work 0 xs

@@ -9,6 +9,10 @@ type t0 = {
 }
 and s = T of t0
 
+let[@inline] unwrap_option = function
+  | Some(e) -> e
+  | None -> failwith "unwrap failed"
+
 let get_npos_block nth blocks =
   blocks |> List.find_opt @@ fun block ->
   !(block.from) <= nth && !(block._to) >= nth
@@ -57,7 +61,7 @@ let mkcfg0 is =
       | Some block ->
         if !(block.succ_pos) <> None then
           begin
-            let Some(succ_pos) = !(block.succ_pos) in
+            let succ_pos = unwrap_option @@ !(block.succ_pos) in
             let () = succ_pos |> List.iter @@ fun pos ->
               match get_npos_block pos !blocks with
               | Some blk_ ->
@@ -114,17 +118,18 @@ type t = {
 and fullcfg = Cfg of t list * fullcfg list
 [@@deriving show {with_path = false }]
 
+
 let rec from_t0_to_t ts =
   ts |> List.map @@ fun (s : t0) ->
   {
     from = !(s.from);
     _to = !(s._to);
     pred = !(s.pred) |> List.map (fun (T (s : t0)) ->
-        let Some(_, i) = Util.find_opt_with_index (fun (t : t0) -> !(t.from) = !(s.from)) ts in
+        let _, i = unwrap_option @@ Util.find_opt_with_index (fun (t : t0) -> !(t.from) = !(s.from)) ts in
         i
       );
     succ = !(s.succ) |> List.map (fun (T (s : t0)) ->
-        let Some(_, i) = Util.find_opt_with_index (fun (t : t0) -> !(t.from) = !(s.from)) ts in
+        let _, i = unwrap_option @@ Util.find_opt_with_index (fun (t : t0) -> !(t.from) = !(s.from)) ts in
         i
       )
   }

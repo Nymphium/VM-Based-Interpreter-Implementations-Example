@@ -30,12 +30,12 @@ let squash ls =
         work (kv :: acc) kvs
   in work [] ls
 
-let get_last = function
+let[@inline] get_last = function
   | Return(reg) :: is -> reg, is
   | TailCall(reg, arg) :: is -> reg, Call(reg, arg) :: is
   | _ -> invalid_arg "get_last"
 
-let compile0 term =
+let[@inline]compile0 term =
   let rec work term fvs env =
     let create_ref () =
       let r = ref (-1) in
@@ -55,10 +55,11 @@ let compile0 term =
         (Return(reg) :: SetBool(reg, (if b then 1 else 0), 0) :: is), cs, cls, fvs, env
       | T.Int i ->
         let reg = regi () in
+        let rint = RInt i in
         let cs', ci =
-          match Util.find_opt_with_index ((=) (RInt(i))) cs with
+          match Util.find_opt_with_index ((=) rint) cs with
           | Some(_, idx) -> cs, idx
-          | None -> RInt(i) :: cs, consti ()
+          | None -> cs @ [rint], consti ()
         in
         let is' = (Return(reg) :: Load(reg, ci) :: is) in
         is', cs', cls, fvs, env
@@ -156,8 +157,8 @@ let compile0 term =
         let fvs' = var_to_reg (SS.fold (fun x z -> x :: z) fv []) env0 in
         let C(isf, csf, clsf, _) = work e fvs' ((x, 0) :: env') in
         (* append fvs map; Upvalue store is growing *)
-        let cl' = C(isf, csf, clsf, fvs @ fvs') in
-        (Return(reg) :: Clos(reg, closi (), 0) :: is), cs, cl' :: cls, fvs, env
+        let cl' = C(isf, csf, clsf, fvs' @ fvs) in
+        (Return(reg) :: Clos(reg, closi (), 0) :: is), cs, cls @ [cl'], fvs, env
       | T.LetRecFun(f, x, body, e) ->
         (* access the function itself in its call by upvalue *)
         let reg = regi () in
@@ -177,7 +178,7 @@ let compile0 term =
         (TailCall(re1, re2) :: is''), cs'', cls'', fvs'', env''
     in
     let is, cs, cls, fvs, env' = inner term [] [] [] [] env in
-    List.(C(rev is, rev cs, rev cls, rev fvs))
+    List.(C(rev is, cs, cls, fvs))
   in work term [] []
 
 let compile t = compile0 t
